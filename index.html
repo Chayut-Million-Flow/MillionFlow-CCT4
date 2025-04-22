@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Golden Ratio - การวางแผนการเงิน</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #002b5c;
+      --accent: #ffd700;
+      --light: #f9f9f9;
+      --gray: #e0e0e0;
+      --border: #000;
+      --progress-green: #4caf50;
+      --progress-red: #e53935;
+      --progress-gray: #ddd;
+      --advice-green: #4caf50;
+      --advice-orange: #ffa726;
+    }
+
+    body {
+      font-family: 'Prompt', sans-serif;
+      margin: 0;
+      background-color: var(--light);
+      color: #333;
+      padding: 0;
+      transition: background 0.3s ease;
+      animation: fadeIn 1s ease-in-out;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: auto;
+      padding: 20px;
+      animation: fadeIn 1s ease-in-out;
+    }
+
+    h1 {
+      background-color: var(--primary);
+      color: white;
+      text-align: center;
+      padding: 15px;
+      font-size: 1.4em;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      animation: fadeIn 0.8s ease-in-out;
+    }
+
+    .income-input {
+      background: linear-gradient(145deg, #ffe066, #ffd700);
+      padding: 20px;
+      text-align: center;
+      font-weight: bold;
+      border-radius: 12px;
+      margin-top: 20px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      animation: fadeIn 1.2s ease-in-out;
+    }
+
+    input[type="number"] {
+      padding: 10px;
+      font-size: 1em;
+      width: 150px;
+      text-align: center;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      margin-top: 10px;
+      transition: all 0.3s ease;
+    }
+
+    input[type="number"]:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(0, 43, 92, 0.2);
+    }
+
+    input[type="number"]::placeholder {
+      color: #ccc;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      background-color: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+      overflow: hidden;
+    }
+
+    th, td {
+      padding: 16px 12px;
+      text-align: center;
+      font-size: 0.95em;
+      transition: background-color 0.2s ease;
+      vertical-align: middle;
+    }
+
+    tr:hover td {
+      background-color: #f6f6f6;
+    }
+
+    thead th {
+      background-color: var(--accent);
+      color: black;
+    }
+
+    .progress-bar {
+      height: 8px;
+      border-radius: 4px;
+      margin-top: 8px;
+      background: var(--progress-gray);
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+    }
+
+    .summary-table {
+      margin-top: 30px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+      justify-items: center;
+    }
+
+    .summary-table table {
+      width: 100%;
+      max-width: 250px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+
+    .chart-container {
+      width: 100%;
+      max-width: 300px;
+      height: auto;
+      animation: fadeIn 1.5s ease-in-out;
+    }
+
+    .error {
+      color: red;
+      margin-top: 10px;
+      font-size: 0.9em;
+    }
+
+    .advice {
+      font-size: 0.85em;
+      margin-top: 6px;
+    }
+
+    .advice.green {
+      color: var(--advice-green);
+    }
+
+    .advice.orange {
+      color: var(--advice-orange);
+    }
+
+    @keyframes fadeIn {
+      0% { opacity: 0; transform: translateY(-10px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 1.2em;
+      }
+
+      th, td {
+        font-size: 0.85em;
+        padding: 10px 5px;
+      }
+
+      .income-input input {
+        width: 100%;
+      }
+
+      .summary-table {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>CASH CONTROL ระบบควบคุมเงิน 1000%</h1>
+  <div class="container">
+    <div class="income-input">
+      รายได้ที่’สม่ำเสมอ‘ต่อเดือน<br>
+      <input type="number" id="income" aria-label="รายได้ต่อเดือน" placeholder="ใส่รายได้" value="" onchange="updateTable()">
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th></th>
+          <th>สัดส่วนทองคำ</th>
+          <th>สัดส่วนของคุณ</th>
+          <th>จำนวนเงิน (บาท)</th>
+        </tr>
+      </thead>
+      <tbody id="table-body"></tbody>
+    </table>
+
+    <div class="summary-table">
+      <table>
+        <tr><th colspan="2">สรุปภาพรวม</th></tr>
+        <tr><td>เก็บ</td><td id="summarySave">0</td></tr>
+        <tr><td>ใช้</td><td id="summaryUse">0</td></tr>
+        <tr><td>คงเหลือ</td><td id="summaryRemain">0</td></tr>
+      </table>
+      <div class="chart-container">
+        <canvas id="summaryChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const categories = [
+      { name: "เก็บออม + ลงทุน", goldenRatio: "10%+", value: 0, type: 'save', target: 0.10 },
+      { name: "ค่าใช้จ่ายคงที่ + หนี้", goldenRatio: "ไม่เกิน 40%", value: 0, type: 'use', target: 0.40 },
+      { name: "ค่าใช้จ่ายผันแปร", goldenRatio: "ไม่เกิน 30%+/-", value: 0, type: 'use', target: 0.30 },
+      { name: "ค่าใช้จ่ายอนาคต (เก็บ)", goldenRatio: "ไม่เกิน 15%", value: 0, type: 'save', target: 0.15 },
+      { name: "ฟุ่มเฟือย", goldenRatio: "5%", value: 0, type: 'use', target: 0.05, normal: true }
+    ];
+
+    let chart;
+
+    function getAdvice(index, ratio) {
+      if (categories[index].value <= 1) return '';
+
+      const target = categories[index].target;
+      const isSave = categories[index].type === 'save';
+      switch (index) {
+        case 0: return ratio < target ? '<div class="advice orange">ลองเพิ่มเงินออมสักหน่อย</div>' : '<div class="advice green">มาถูกทางละครับ😊</div>';
+        case 1: return ratio > target ? '<div class="advice orange">ลดลงมาหน่อยครับ😊</div>' : '<div class="advice green">เยี่ยมเลยครับ!</div>';
+        case 2: return ratio > target ? '<div class="advice orange">ตรงนี้ยืดหยุ่นได้😊 แต่ ⚠ระวังนิดนึงนะครับ!</div>' : '<div class="advice green">เยี่ยมเลยครับผม!</div>';
+        case 3: return ratio > target ? '<div class="advice orange">⚠ระวังอย่างให้ตรงนี้มากไปนะครับ</div>' : '<div class="advice green">กำลังดีครับ😊</div>';
+        case 4: return ratio > target ? '<div class="advice orange">ไม่เยอะเกินไปนะครับ😊</div>' : '<div class="advice green">กำลังดีครับผม^^</div>';
+        default: return '';
+      }
+    }
+
+    function updateTable() {
+      const income = parseFloat(document.getElementById("income").value);
+      const tbody = document.getElementById("table-body");
+      const summarySave = document.getElementById("summarySave");
+      const summaryUse = document.getElementById("summaryUse");
+      const summaryRemain = document.getElementById("summaryRemain");
+
+      tbody.innerHTML = "";
+      let totalUsed = 0;
+
+      categories.forEach((cat, index) => {
+        if (cat.value < 0) cat.value = 0;
+        const ratio = income ? (cat.value / income) : 0;
+        const percentText = (ratio * 100).toFixed(2) + "%";
+        const isNormal = cat.normal;
+        const targetRatio = cat.target || 0;
+
+        const isSaveAndAboveTarget = cat.type === 'save' && ratio >= targetRatio;
+        const isOver = ratio > targetRatio && !isSaveAndAboveTarget;
+        const progressColor = isOver ? 'var(--progress-red)' : 'var(--progress-green)';
+
+        const progressHTML = `
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: ${(ratio * 100).toFixed(1)}%; background: ${progressColor};"></div>
+          </div>`;
+
+        const adviceHTML = getAdvice(index, ratio);
+
+        const row = `<tr style="${isNormal ? 'font-weight: normal;' : ''}">
+          <td>${cat.name}${progressHTML}${adviceHTML}</td>
+          <td>${cat.goldenRatio}</td>
+          <td>${percentText}</td>
+          <td><input type='number' value='${cat.value || ''}' placeholder='' min='0' onchange='updateValue(${index}, this.value)' /></td>
+        </tr>`;
+
+        tbody.innerHTML += row;
+        totalUsed += cat.value;
+      });
+
+      const totalSave = categories.filter(c => c.type === 'save').reduce((sum, c) => sum + c.value, 0);
+      const totalUse = categories.filter(c => c.type === 'use').reduce((sum, c) => sum + c.value, 0);
+      const remain = income - (totalSave + totalUse);
+
+      summarySave.innerText = totalSave.toLocaleString();
+      summaryUse.innerText = totalUse.toLocaleString();
+      summaryRemain.innerText = remain.toLocaleString();
+
+      updateChart(totalSave, totalUse, remain);
+    }
+
+    function updateChart(save, use, remain) {
+      const ctx = document.getElementById('summaryChart').getContext('2d');
+
+      if (chart) chart.destroy();
+
+      chart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['เก็บ', 'ใช้', 'คงเหลือ'],
+          datasets: [{
+            data: [save, use, remain],
+            backgroundColor: ['#4a90e2', '#002b5c', '#ffd700'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          plugins: {
+            legend: { position: 'right' },
+            tooltip: {
+              callbacks: {
+                label: context => `${context.label}: ${context.parsed.toLocaleString()} บาท`
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function updateValue(index, newValue) {
+      const value = parseFloat(newValue) || 0;
+      categories[index].value = value >= 0 ? value : 0;
+      updateTable();
+    }
+
+    updateTable();
+  </script>
+</body>
+</html>
